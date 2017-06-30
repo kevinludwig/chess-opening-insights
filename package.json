@@ -1,0 +1,29 @@
+{
+  "name": "chess-opening-insight",
+  "version": "0.0.0",
+  "description": "analyze a PGN database of your games to see where you should focus opening study",
+  "keywords": [
+    "chess"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kevinludwig/chess-opening-insight.git"
+  },
+  "engines": {
+    "node": ">= 6.0.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "main": "insight.js",
+  "dependencies": {
+    "chess.js": "^0.10.2",
+    "pgn-parser": "0.0.7",
+    "chess-eco-codes": "https://github.com/kevinludwig/chess-eco-codes.git"
+  },
+  "devDependencies": {
+    "chai": "^4.0.2",
+    "mocha": "^3.4.2"
+  }
+}
