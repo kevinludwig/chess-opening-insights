@@ -14,6 +14,21 @@ const gameResultMap = {
     '1/2-1/2': 'draw'
 };
 
+function winPercentage(w, l, d) {
+    const points = w + (d/2);
+    const total = w + l + d;
+    const rate = points / total;
+    return +rate.toPrecision(2) * 100 + "%";
+}
+
+function withPercentages(obj) {
+    return Object.entries(obj).reduce((acc, [k, v]) => {
+        acc[k] = v;
+        acc[k].rate = winPercentage(v.win || 0, v.loss || 0, v.draw || 0);
+        return acc;
+    }, {});
+}
+
 async function run() {
     const pgnData = await readFile(process.argv[2], 'utf-8');
 
@@ -49,11 +64,10 @@ async function run() {
         }
         chess.reset();
     }
-    console.log(JSON.stringify(result, null, 4));
+    console.log(JSON.stringify(withPercentages(result), null, 4));
 
     const group = Object.entries(result).filter(([k, v]) => {
-        console.log("key:",k);
-        return /English/.test(k) //&& /symmetrical/.test(k); 
+        return /English/.test(k) && /symmetrical/.test(k); 
     }).reduce((acc, [k, v]) => {
         if (v.win) {
             acc.win = acc.win ? acc.win + v.win : v.win;
@@ -66,6 +80,7 @@ async function run() {
         }
         return acc;
     }, {});
+    group.rate = winPercentage(group.win, group.loss, group.draw);
     console.log('English Symmetrical variants', JSON.stringify(group, null, 4));
 }
 
