@@ -29,6 +29,35 @@ function withPercentages(obj) {
     }, {});
 }
 
+function updateResult(result, ecoCode) {
+    const key = ecoCode.code + ' ' + ecoCode.name;
+    const gameResult = gameResultMap[game.result];
+    
+    if (result[key]) {
+        result[key].total += 1;
+    } else {
+        result[key] = {total: 1};
+    }
+    
+    if (result[key][gameResult]) {
+        result[key][gameResult] += 1;
+    } else {
+        result[key][gameResult] = 1;
+    }
+}
+
+function printResult(result) {
+    Object.entries(result).sort((a, b) => {
+        const t1 = a[1].total;
+        const t2 = b[1].total;
+        if (t1 < t2) return 1;
+        else if (t1 > t2) return -1;
+        else return 0;
+    }).forEach(([k, v]) => {
+        console.log(k, v.rate, "(" + v.total + ")");  
+    });
+}
+
 async function run() {
     const pgnData = await readFile(process.argv[2], 'utf-8');
 
@@ -46,26 +75,13 @@ async function run() {
                 ecoCode = code;
             }
         }
-        if (ecoCode) {
-            const key = ecoCode.code + ' ' + ecoCode.name;
-            const gameResult = gameResultMap[game.result];
-            
-            if (result[key]) {
-                result[key].total += 1;
-            } else {
-                result[key] = {total: 1};
-            }
-            
-            if (result[key][gameResult]) {
-                result[key][gameResult] += 1;
-            } else {
-                result[key][gameResult] = 1;
-            }
-        }
+        updateResult(result, ecoCode);
         chess.reset();
+        ecoCode = null;
     }
-    console.log(JSON.stringify(withPercentages(result), null, 4));
+    printResult(withPercentages(result));
 
+    /* Ad-hoc aggregations */
     const group = Object.entries(result).filter(([k, v]) => {
         return /English/.test(k) && /symmetrical/.test(k); 
     }).reduce((acc, [k, v]) => {
