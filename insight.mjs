@@ -9,7 +9,7 @@ import repertoire from './repertoire.js';
 
 const parser = await util.promisify(pgnParser)();
 const chess = new ChessJs.Chess();
-const optionsList = [
+const optionList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'get some help'},
     {name: 'eco', alias: 'e', type: Boolean, description: 'classify by ECO'},
     {name: 'source', alias: 's', type: String, description: 'lichess or chess.com', defaultValue: 'chess.com'},
@@ -17,7 +17,7 @@ const optionsList = [
     {name: 'months', alias: 'm', type: Number, description: 'number of months of games to fetch', defaultValue: 3},
     {name: 'color', alias: 'c', type: String, description: 'white or black', defaultValue: 'white'}
 ];
-const options = commandLineArgs(optionsList);
+const options = commandLineArgs(optionList);
 
 const gameResultMap = {
     '1-0': 'win',
