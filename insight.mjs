@@ -12,6 +12,7 @@ const chess = new ChessJs.Chess();
 const optionList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'get some help'},
     {name: 'eco', alias: 'e', type: Boolean, description: 'classify by ECO'},
+    {name: 'depth', alias: 'd', type: Number, description: 'half-move depth to look for matches', defaultValue: 20},
     {name: 'source', alias: 's', type: String, description: 'lichess or chess.com', defaultValue: 'chess.com'},
     {name: 'username', alias: 'u', type: String, description: 'Chess.com username'},
     {name: 'months', alias: 'm', type: Number, description: 'number of months of games to fetch', defaultValue: 3},
@@ -19,13 +20,7 @@ const optionList = [
 ];
 const options = commandLineArgs(optionList);
 
-const gameResultMap = {
-    '1-0': 'win',
-    '0-1': 'loss',
-    '1/2-1/2': 'draw'
-};
-
-function winPercentage(w, l, d) {
+const computeRate = (w, l, d) => {
     const total = w + l + d;
     const sw = Math.round((w / total).toPrecision(2) * 100);
     const sl = Math.round((l / total).toPrecision(2) * 100);
@@ -33,29 +28,23 @@ function winPercentage(w, l, d) {
     return `${sw}% / ${sd}% / ${sl}%`;
 }
 
-const withPercentages = (obj) => Object.entries(obj).reduce((acc, [k, v]) => {
+const withWinRates = (obj) => Object.entries(obj).reduce((acc, [k, v]) => {
     acc[k] = v;
-    acc[k].rate = winPercentage(v.win || 0, v.loss || 0, v.draw || 0);
+    acc[k].rate = computeRate(v['1-0'] || 0, v['0-1'] || 0, v['1/2-1/2'] || 0);
     return acc;
 }, {});
 
-function updateResult(result, line, gameResult) {
+const updateResult = (result, line, gameResult) => {
     const key = line?.name ?? "Other";
     
-    if (result[key]) {
-        result[key].total += 1;
-    } else {
-        result[key] = {total: 1};
-    }
-    
-    if (result[key][gameResult]) {
-        result[key][gameResult] += 1;
-    } else {
-        result[key][gameResult] = 1;
-    }
+    result[key] = result[key] ?? {total: 0};
+    result[key][gameResult] = result[key][gameResult] ?? 0;
+
+    result[key].total += 1;
+    result[key][gameResult] += 1;
 }
 
-function printResult(result) {
+const printResult = (result) => {
     Object.entries(result).sort((a, b) => {
         const t1 = a[1].total;
         const t2 = b[1].total;
@@ -80,7 +69,7 @@ async function lastNMonthsFromChessCom(archives, username, color, n) {
 
 async function fetchPgnFromChessCom(username, color, months) {
     const {data} = await axios.get(`https://api.chess.com/pub/player/${username}/games/archives`);
-    return lastNMonths(data.archives, username, color, months);
+    return lastNMonthsFromChessCom(data.archives, username, color, months);
 }
 
 async function fetchPgnFromLiChess(username, color, months) {
@@ -125,17 +114,17 @@ try {
         const result = {};
         for (const game of games) {
             let line = null;
-            for (const {move} of game.moves.slice(0, 20)) {
+            for (const {move} of game.moves.slice(0, options.depth)) {
                 chess.move(move);
                 const l = options.eco ? ECO(chess.fen()) : repertoire.find(elem => elem.fen === chess.fen());
                 if (l) {
                    line = l;
                 }
             }
-            updateResult(result, line, gameResultMap[game.result]);
+            updateResult(result, line, game.result);
             chess.reset();
         }
-        printResult(withPercentages(result));
+        printResult(withWinRates(result));
     }
 } catch(ex) {
     console.log(ex);
