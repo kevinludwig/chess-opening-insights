@@ -77,18 +77,7 @@ async function lastNMonths(archives, username, color, n) {
 
 async function fetchPgn(username, color, months) {
     const {data} = await axios.get(`https://api.chess.com/pub/player/${username}/games/archives`);
-    const pgnData = await lastNMonths(data.archives, username, color, months);
-
-    /* calculate fen in each repertoire line */
-    for (const line of repertoire) {
-        const [g] = parser.parse(line.moves);
-        for (const {move} of g.moves) {
-            chess.move(move);
-        }
-        line.fen = chess.fen();
-        chess.reset();
-    }
-    return pgnData;
+    return lastNMonths(data.archives, username, color, months);
 }
 
 try {
@@ -98,6 +87,15 @@ try {
             {header: 'Options', optionList}
         ]));
     } else {
+        /* calculate fen in each repertoire line */
+        for (const line of repertoire) {
+            const [g] = parser.parse(line.moves);
+            for (const {move} of g.moves) {
+                chess.move(move);
+            }
+            line.fen = chess.fen();
+            chess.reset();
+        }
 
         const pgnData = await fetchPgn(options.username, options.color, options.months);
         const games = parser.parse(pgnData);
