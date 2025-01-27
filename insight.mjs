@@ -91,12 +91,12 @@ async function fetchPgnFromLiChess(username, color, months) {
     d.setHours(0, 0, 0, 0);
     const since = d.getTime();
 
-    const pgn = await axios.get(`https://lichess.org/api/games/user/${username}`, {
+    const {data} = await axios.get(`https://lichess.org/api/games/user/${username}`, {
         params: {
             color, since, max
         }
     });
-    return pgn;
+    return data;
 }
 
 try {
