@@ -1,6 +1,7 @@
 import util from 'node:util';
 import axios from 'axios';
 import pgnParser from 'pgn-parser';
+import ECO from 'chess-eco-codes';
 import ChessJs from 'chess.js';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
@@ -10,6 +11,7 @@ const parser = await util.promisify(pgnParser)();
 const chess = new ChessJs.Chess();
 const optionsList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'get some help'},
+    {name: 'eco', alias: 'e', type: Boolean, description: 'classify by ECO'},
     {name: 'username', alias: 'u', type: String, description: 'Chess.com username', defaultValue: 'kevinthesnipe'},
     {name: 'months', alias: 'm', type: Number, description: 'number of months of games to fetch', defaultValue: 3},
     {name: 'color', alias: 'c', type: String, description: 'white or black', defaultValue: 'white'}
@@ -88,13 +90,15 @@ try {
         ]));
     } else {
         /* calculate fen in each repertoire line */
-        for (const line of repertoire) {
-            const [g] = parser.parse(line.moves);
-            for (const {move} of g.moves) {
-                chess.move(move);
+        if (!options.eco) {
+            for (const line of repertoire) {
+                const [g] = parser.parse(line.moves);
+                for (const {move} of g.moves) {
+                    chess.move(move);
+                }
+                line.fen = chess.fen();
+                chess.reset();
             }
-            line.fen = chess.fen();
-            chess.reset();
         }
 
         const pgnData = await fetchPgn(options.username, options.color, options.months);
@@ -104,9 +108,9 @@ try {
             let line = null;
             for (const {move} of game.moves.slice(0, 20)) {
                 chess.move(move);
-                const l = repertoire.find(elem => elem.fen === chess.fen());
+                const l = options.eco ? ECO(chess.fen()) : repertoire.find(elem => elem.fen === chess.fen());
                 if (l) {
-                    line = l;
+                   line = l;
                 }
             }
             updateResult(result, line, gameResultMap[game.result]);
