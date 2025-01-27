@@ -9,9 +9,13 @@ Analyze your chess.com openings to see where you're winning and losing
 You need to modify the file `repertoire.js` to include the lines you want classified in your repertoire
 
 ```
-./insight.js --username <Chess.com username> --months <number of months of games to pull> --color <white or black>
+node ./insight.mjs --username yourUsername --months 1 --color white
 ```
 
+You can also classify simply by chess.com games and ECO codes like this:
+```
+node ./insight.mjs --username yourUsername --months 1 --color white --eco
+```
 ### Output
 
 The result from the console log above would be 
