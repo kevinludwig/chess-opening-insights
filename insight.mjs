@@ -12,7 +12,8 @@ const chess = new ChessJs.Chess();
 const optionsList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'get some help'},
     {name: 'eco', alias: 'e', type: Boolean, description: 'classify by ECO'},
-    {name: 'username', alias: 'u', type: String, description: 'Chess.com username', defaultValue: 'kevinthesnipe'},
+    {name: 'source', alias: 's', type: String, description: 'lichess or chess.com', defaultValue: 'chess.com'},
+    {name: 'username', alias: 'u', type: String, description: 'Chess.com username'},
     {name: 'months', alias: 'm', type: Number, description: 'number of months of games to fetch', defaultValue: 3},
     {name: 'color', alias: 'c', type: String, description: 'white or black', defaultValue: 'white'}
 ];
@@ -66,7 +67,7 @@ function printResult(result) {
     });
 }
 
-async function lastNMonths(archives, username, color, n) {
+async function lastNMonthsFromChessCom(archives, username, color, n) {
     let pgnData = "";
     for (const url of archives.slice(-n)) {
         const {data} = await axios.get(url);
@@ -77,9 +78,25 @@ async function lastNMonths(archives, username, color, n) {
     return pgnData;
 }
 
-async function fetchPgn(username, color, months) {
+async function fetchPgnFromChessCom(username, color, months) {
     const {data} = await axios.get(`https://api.chess.com/pub/player/${username}/games/archives`);
     return lastNMonths(data.archives, username, color, months);
+}
+
+async function fetchPgnFromLiChess(username, color, months) {
+    const max = 5000;
+    const d = new Date();
+    d.setMonth(d.getMonth() - (months-1));
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    const since = d.getTime();
+
+    const pgn = await axios.get(`https://lichess.org/api/games/user/${username}`, {
+        params: {
+            color, since, max
+        }
+    });
+    return pgn;
 }
 
 try {
@@ -101,7 +118,9 @@ try {
             }
         }
 
-        const pgnData = await fetchPgn(options.username, options.color, options.months);
+        const pgnData = options.source === 'chess.com' ? 
+            await fetchPgnFromChessCom(options.username, options.color, options.months) : 
+            await fetchPgnFromLiChess(options.username, options.color, options.months);
         const games = parser.parse(pgnData);
         const result = {};
         for (const game of games) {
