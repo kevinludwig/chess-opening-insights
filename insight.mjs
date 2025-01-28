@@ -22,6 +22,17 @@ const optionList = [
 ];
 const options = commandLineArgs(optionList);
 
+const computeRepertoireFEN = (lines) => {
+    for (const line of lines) {
+        const [g] = parser.parse(line.moves);
+        for (const {move} of g.moves) {
+            chess.move(move);
+        }
+        line.fen = chess.fen();
+        chess.reset();
+    }
+};
+
 const computeRate = (w, l, d) => {
     const total = w + l + d;
     const sw = Math.round((w / total).toPrecision(2) * 100);
@@ -54,7 +65,7 @@ const printResult = (result) => {
         else if (t1 > t2) return -1;
         else return 0;
     }).forEach(([k, v]) => {
-        console.log(k, v.rate, `(${v.total})`);  
+        console.log(k.padEnd(40), v.rate.padEnd(15), `(${v.total})`);  
     });
 }
 
@@ -98,16 +109,9 @@ try {
             {header: 'Options', optionList}
         ]));
     } else {
-        /* calculate fen in each repertoire line */
         if (!options.eco) {
-            for (const line of repertoire) {
-                const [g] = parser.parse(line.moves);
-                for (const {move} of g.moves) {
-                    chess.move(move);
-                }
-                line.fen = chess.fen();
-                chess.reset();
-            }
+            computeRepertoireFEN(repertoire.white);
+            computeRepertoireFEN(repertoire.black);
         }
 
         let pgnData = '';
@@ -124,11 +128,14 @@ try {
             let line = null;
             for (const {move} of game.moves.slice(0, options.depth)) {
                 chess.move(move);
-                const l = options.eco ? ECO(chess.fen()) : repertoire.find(elem => elem.fen === chess.fen());
+                const l = options.eco ? ECO(chess.fen()) : repertoire[options.color].find(elem => elem.fen === chess.fen());
                 if (l) {
                    line = l;
                 }
             }
+            /* What games are being grouped into "Other"? 
+            if (!line) console.log(game.moves.slice(0,12).map(m => m.move).join(' ')); */
+
             updateResult(result, line, game.result);
             chess.reset();
         }
