@@ -1,13 +1,16 @@
+/* Average opponent rating
+   show win % instead of white win%, draw%, loss%, with counts of white win, draw, black win.
+   convert to express app with web page to enter params and show results
+*/
 import util from 'node:util';
 import axios from 'axios';
-import pgnParser from 'pgn-parser';
+import parser from 'pgn-parser';
 import ECO from 'chess-eco-codes';
 import ChessJs from 'chess.js';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
 import repertoire from './repertoire.js';
 
-const parser = await util.promisify(pgnParser)();
 const chess = new ChessJs.Chess();
 const optionList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'get some help'},
@@ -47,17 +50,19 @@ const withWinRates = (obj) => Object.entries(obj).reduce((acc, [k, v]) => {
     return acc;
 }, {});
 
-const updateResult = (result, line, gameResult) => {
-    const key = line?.name ?? "Other";
+const updateResult = (result, line, gameResult, opponentRating) => {
+    const key = line.name;
     
-    result[key] = result[key] ?? {total: 0};
+    result[key] = result[key] ?? {total: 0, opponentRating: 0};
     result[key][gameResult] = result[key][gameResult] ?? 0;
 
     result[key].total += 1;
+    result[key].opponentRating += opponentRating;
     result[key][gameResult] += 1;
 }
 
-const printResult = (result) => {
+const printResult = (label, result) => {
+    console.log(label);
     Object.entries(result).sort((a, b) => {
         const t1 = a[1].total;
         const t2 = b[1].total;
@@ -65,7 +70,7 @@ const printResult = (result) => {
         else if (t1 > t2) return -1;
         else return 0;
     }).forEach(([k, v]) => {
-        console.log(k.padEnd(40), v.rate.padEnd(15), `(${v.total})`);  
+        console.log(k.padEnd(45), v.rate.padEnd(15), `(${v.total})`, Math.floor(v.opponentRating / v.total));  
     });
 }
 
@@ -102,6 +107,22 @@ async function fetchPgnFromLiChess(username, color, months) {
     return data;
 }
 
+const findMatchingLine = (game, eco) => {
+    let line = null;
+    for (const {move} of game.moves.slice(0, options.depth)) {
+        chess.move(move);
+        const l = eco ? ECO(chess.fen()) : repertoire[options.color].find(elem => elem.fen === chess.fen());
+        if (l) line = l;
+    }
+    chess.reset();
+    return line;
+};
+
+const getOpponentRating = (headers, color) => {
+    const key = color === 'White' ? 'BlackElo' : 'WhiteElo';
+    return +headers.find(h => h.name === key).value || 0;
+};
+
 try {
     if (options.help) {
         console.log(commandLineUsage([
@@ -123,23 +144,24 @@ try {
         }
             
         const games = parser.parse(pgnData);
-        const result = {};
+        const result = {rep:{}, eco:{}};
         for (const game of games) {
             let line = null;
-            for (const {move} of game.moves.slice(0, options.depth)) {
-                chess.move(move);
-                const l = options.eco ? ECO(chess.fen()) : repertoire[options.color].find(elem => elem.fen === chess.fen());
-                if (l) {
-                   line = l;
-                }
-            }
-            /* What games are being grouped into "Other"? 
-            if (!line) console.log(game.moves.slice(0,12).map(m => m.move).join(' ')); */
+            const opponentRating = getOpponentRating(game.headers, options.color);
 
-            updateResult(result, line, game.result);
-            chess.reset();
+            if (!options.eco) {
+                line = findMatchingLine(game, false);
+            }
+            if (line) {
+                updateResult(result.rep, line, game.result, opponentRating);
+            } else {
+               line = findMatchingLine(game, true);
+               if (line) updateResult(result.eco, line, game.result, opponentRating);
+            }
         }
-        printResult(withWinRates(result));
+        printResult("Repertoire Results", withWinRates(result.rep));
+        console.log(" ");
+        printResult("ECO Code Results", withWinRates(result.eco));
     }
 } catch(ex) {
     console.log(ex);
