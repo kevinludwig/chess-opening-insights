@@ -1,5 +1,4 @@
-/* Average opponent rating
-   show win % instead of white win%, draw%, loss%, with counts of white win, draw, black win.
+/* show win % instead of white win%, draw%, loss%, with counts of white win, draw, black win.
    convert to express app with web page to enter params and show results
 */
 import util from 'node:util';
@@ -25,6 +24,13 @@ const optionList = [
 ];
 const options = commandLineArgs(optionList);
 
+const WHITE_WIN = '1-0';
+const BLACK_WIN = '0-1';
+const DRAW = '1/2-1/2';
+/* 
+The repertoire file has PGN but not FEN. This parses each repertoire line
+and calculates and saves the FEN for each position.
+*/
 const computeRepertoireFEN = (lines) => {
     for (const line of lines) {
         const [g] = parser.parse(line.moves);
@@ -36,41 +42,63 @@ const computeRepertoireFEN = (lines) => {
     }
 };
 
-const computeRate = (w, l, d) => {
-    const total = w + l + d;
-    const sw = Math.round((w / total).toPrecision(2) * 100);
-    const sl = Math.round((l / total).toPrecision(2) * 100);
-    const sd = Math.round((d / total).toPrecision(2) * 100);
-    return `${sw}% / ${sd}% / ${sl}%`;
-}
+const computeRate = (wins, draws, total) => Math.round(((wins + (draws/2)) / total).toPrecision(2) * 100);
 
-const withWinRates = (obj) => Object.entries(obj).reduce((acc, [k, v]) => {
+const withWinRates = (obj, color) => {
+    const whiteWins = obj[WHITE_WIN];
+    const blackWins = obj[BLACK_WIN];
+    const draws = obj[DRAW];
+
+    obj.rate = whiteWins + "/" + draws + "/" + blackWins;
+    obj.perf = computeRate(color === 'white' ? whiteWins : blackWins, draws, obj.total);
+    obj.lines = _withWinRates(obj.lines, color);
+    return obj;
+};
+
+const _withWinRates = (obj, color) => Object.entries(obj).reduce((acc, [k, v]) => {
+    const whiteWins = v[WHITE_WIN] ?? 0;
+    const blackWins = v[BLACK_WIN] ?? 0;
+    const draws = v[DRAW] || 0;
+    const total = whiteWins + blackWins + draws;
     acc[k] = v;
-    acc[k].rate = computeRate(v['1-0'] || 0, v['0-1'] || 0, v['1/2-1/2'] || 0);
+    acc[k].rate = whiteWins + "/" + draws + "/" + blackWins;
+    acc[k].perf = computeRate(color === 'white' ? whiteWins : blackWins, draws, total);
     return acc;
 }, {});
 
-const updateResult = (result, line, gameResult, opponentRating) => {
-    const key = line.name;
-    
-    result[key] = result[key] ?? {total: 0, opponentRating: 0};
-    result[key][gameResult] = result[key][gameResult] ?? 0;
+const updateResult = (result, key, gameResult, opponentRating) => { 
+    result.total = result.total ?? 0;
+    result.opponentRating = result.opponentRating ?? 0;
+    result[WHITE_WIN] = result[WHITE_WIN] ?? 0;
+    result[BLACK_WIN] = result[BLACK_WIN] ?? 0;
+    result[DRAW] = result[DRAW] ?? 0;
+   
+    result.lines[key] = result.lines[key] ?? {total: 0, opponentRating: 0};
+    result.lines[key][gameResult] = result.lines[key][gameResult] ?? 0;
 
-    result[key].total += 1;
-    result[key].opponentRating += opponentRating;
-    result[key][gameResult] += 1;
-}
+    result.total += 1;
+    result.lines[key].total += 1;
+
+    result.opponentRating += opponentRating;
+    result.lines[key].opponentRating += opponentRating;
+
+    result[gameResult] += 1;
+    result.lines[key][gameResult] += 1;    
+};
+
+const printResultLine = (label, result) => 
+    console.log(label.padEnd(45), result.rate.padEnd(15), result.perf + "%", Math.floor(result.opponentRating / result.total));
 
 const printResult = (label, result) => {
-    console.log(label);
-    Object.entries(result).sort((a, b) => {
+    printResultLine(label, result);
+    Object.entries(result.lines).sort((a, b) => {
         const t1 = a[1].total;
         const t2 = b[1].total;
         if (t1 < t2) return 1;
         else if (t1 > t2) return -1;
         else return 0;
     }).forEach(([k, v]) => {
-        console.log(k.padEnd(45), v.rate.padEnd(15), `(${v.total})`, Math.floor(v.opponentRating / v.total));  
+        printResultLine(k, v);  
     });
 }
 
@@ -144,7 +172,7 @@ try {
         }
             
         const games = parser.parse(pgnData);
-        const result = {rep:{}, eco:{}};
+        const result = {rep:{lines:{}}, eco:{lines:{}}};
         for (const game of games) {
             let line = null;
             const opponentRating = getOpponentRating(game.headers, options.color);
@@ -153,15 +181,15 @@ try {
                 line = findMatchingLine(game, false);
             }
             if (line) {
-                updateResult(result.rep, line, game.result, opponentRating);
+                updateResult(result.rep, line.name, game.result, opponentRating);
             } else {
                line = findMatchingLine(game, true);
-               if (line) updateResult(result.eco, line, game.result, opponentRating);
+               if (line) updateResult(result.eco, line.name, game.result, opponentRating);
             }
         }
-        printResult("Repertoire Results", withWinRates(result.rep));
+        printResult("Repertoire Results", withWinRates(result.rep, options.color));
         console.log(" ");
-        printResult("ECO Code Results", withWinRates(result.eco));
+        printResult("ECO Code Results", withWinRates(result.eco, options.color));
     }
 } catch(ex) {
     console.log(ex);
