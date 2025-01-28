@@ -76,6 +76,7 @@ async function fetchPgnFromChessCom(username, color, months) {
 
 async function fetchPgnFromLiChess(username, color, months) {
     const max = 5000;
+    const perfType = 'blitz,rapid,classical,correspondence';
     const d = new Date();
     d.setMonth(d.getMonth() - (months-1));
     d.setDate(1);
@@ -84,7 +85,7 @@ async function fetchPgnFromLiChess(username, color, months) {
 
     const {data} = await axios.get(`https://lichess.org/api/games/user/${username}`, {
         params: {
-            color, since, max
+            color, perfType, since, max
         }
     });
     return data;
