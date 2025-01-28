@@ -13,8 +13,10 @@ const optionList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'get some help'},
     {name: 'eco', alias: 'e', type: Boolean, description: 'classify by ECO'},
     {name: 'depth', alias: 'd', type: Number, description: 'half-move depth to look for matches', defaultValue: 20},
-    {name: 'source', alias: 's', type: String, description: 'lichess or chess.com', defaultValue: 'chess.com'},
-    {name: 'username', alias: 'u', type: String, description: 'Chess.com username'},
+    {name: 'source', alias: 's', type: String, description: 'lichess, chess.com, or both', defaultValue: 'both'},
+    {name: 'username', alias: 'u', type: String, description: 'Chess.com or lichess username'},
+    {name: 'username-chesscom', type: String, description: 'Chess.com username'},
+    {name: 'username-lichess', type: String, description: 'lichess username'},
     {name: 'months', alias: 'm', type: Number, description: 'number of months of games to fetch', defaultValue: 3},
     {name: 'color', alias: 'c', type: String, description: 'white or black', defaultValue: 'white'}
 ];
@@ -107,9 +109,14 @@ try {
             }
         }
 
-        const pgnData = options.source === 'chess.com' ? 
-            await fetchPgnFromChessCom(options.username, options.color, options.months) : 
-            await fetchPgnFromLiChess(options.username, options.color, options.months);
+        let pgnData = '';
+        if (['chess.com', 'both'].includes(options.source)) {
+            pgnData = await fetchPgnFromChessCom(options['username-chesscom'] ?? options.username, options.color, options.months);
+        }
+        if (['lichess', 'both'].includes(options.source)) {
+            pgnData += await fetchPgnFromLiChess(options['username-lichess'] ?? options.username, options.color, options.months);
+        }
+            
         const games = parser.parse(pgnData);
         const result = {};
         for (const game of games) {
