@@ -1,4 +1,4 @@
-/* show win % instead of white win%, draw%, loss%, with counts of white win, draw, black win.
+/* cache api responses to speed things up
    convert to express app with web page to enter params and show results
 */
 import util from 'node:util';
@@ -128,6 +128,9 @@ async function fetchPgnFromLiChess(username, color, months) {
     const since = d.getTime();
 
     const {data} = await axios.get(`https://lichess.org/api/games/user/${username}`, {
+        headers: {
+            Accept: 'application/x-chess-pgn',
+        },
         params: {
             color, perfType, since, max
         }
@@ -170,7 +173,7 @@ try {
         if (['lichess', 'both'].includes(options.source)) {
             pgnData += await fetchPgnFromLiChess(options['username-lichess'] ?? options.username, options.color, options.months);
         }
-            
+        
         const games = parser.parse(pgnData);
         const result = {rep:{lines:{}}, eco:{lines:{}}};
         for (const game of games) {
