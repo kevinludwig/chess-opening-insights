@@ -1,5 +1,7 @@
 module.exports = {
     white: [
+        {moves: "1. e4 e5 2. Nf3 Nc6 3. d4 exd4 4. c3 *", name: "Goring Gambit"},
+        {moves: "1. e4 e5 2. d4 exd4 3. c3 *", name: "Danish Gambit"},
         {moves: "1. e4 e5 2. Nf3 Nf6 *", name: "Petroff"},
         {moves: "1. e4 e5 2. Nf3 d6 *", name: "Philidor"},
         {moves: "1. e4 e5 2. f4 *", name: "King's Gambit"},
@@ -14,10 +16,15 @@ module.exports = {
         {moves: "1. e4 Nf6 *", name: "Alekhine's Defense"},
         {moves: "1. e4 g6 2. d4 *", name: "Modern Defense"},
         {moves: "1. e4 d6 2. d4 Nf6 *", name: "Pirc Defense"},
+        {moves: "1. e4 c6 *", name: "Caro Kann"},
         {moves: "1. e4 c6 2. d4 d5 *", name: "Caro Kann"},
         {moves: "1. e4 c6 2. Nc3 *", name: "Caro Kann"},
         {moves: "1. e4 d5 2. exd5 *", name: "Scandinavian"},
         {moves: "1. e4 c5 *", name: "Sicilian Defense"},
+        {moves: "1. e4 c5 2. c3 *", name: "Alapin Sicilian"},
+        {moves: "1. e4 c5 2. Nc3 *", name: "Closed Sicilian"},
+        {moves: "1. e4 c5 2. d4 *", name: "Smith-Morra Gambit"},
+        {moves: "1. e4 c5 2. f4 *", name: "Grand Prix Attack"},
         {moves: "1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 *", name: "Sicilian: Najdorf"},
         {moves: "1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 g6 *", name: "Sicilian: Dragon"},
         {moves: "1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e6 *", name: "Sicilian: Scheveningen"},
