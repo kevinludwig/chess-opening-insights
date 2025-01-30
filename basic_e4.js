@@ -1,5 +1,6 @@
 module.exports = {
-    white: [
+    white: [ 
+        {moves: "1. e4 e5 2. Nf3 Nc6 3. c3 *", name: "Ponziani"},
         {moves: "1. e4 e5 2. Nf3 Nc6 3. d4 exd4 4. c3 *", name: "Goring Gambit"},
         {moves: "1. e4 e5 2. d4 exd4 3. c3 *", name: "Danish Gambit"},
         {moves: "1. e4 e5 2. Nf3 Nf6 *", name: "Petroff"},
@@ -11,6 +12,7 @@ module.exports = {
         {moves: "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 *", name: "Italian Game"},
         {moves: "1. e4 e5 2. Nf3 Nc6 3. Bb5 *", name: "Ruy Lopez"},
         {moves: "1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 *", name: "Two Knights"},
+        {moves: "1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 *", name: "Four Knights"},
         {moves: "1. e4 e5 2. Nc3 *", name: "Vienna Game"},
         {moves: "1. e4 e5 2. d4 exd4 3. Qxd4 *", name: "Center Game"},
         {moves: "1. e4 Nf6 *", name: "Alekhine's Defense"},
