@@ -8,11 +8,11 @@ import ECO from 'chess-eco-codes';
 import ChessJs from 'chess.js';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
-import repertoire from './repertoire.js';
 
 const chess = new ChessJs.Chess();
 const optionList = [
     {name: 'help', alias: 'h', type: Boolean, description: 'get some help'},
+    {name: 'file', alias: 'f', type: String, description: 'js repertoire file', defaultValue: './repertoire.js'},
     {name: 'eco', alias: 'e', type: Boolean, description: 'classify by ECO'},
     {name: 'depth', alias: 'd', type: Number, description: 'half-move depth to look for matches', defaultValue: 20},
     {name: 'source', alias: 's', type: String, description: 'lichess, chess.com, or both', defaultValue: 'both'},
@@ -138,7 +138,7 @@ async function fetchPgnFromLiChess(username, color, months) {
     return data;
 }
 
-const findMatchingLine = (game, eco) => {
+const findMatchingLine = (repertoire, game, eco) => {
     let line = null;
     for (const {move} of game.moves.slice(0, options.depth)) {
         chess.move(move);
@@ -161,6 +161,7 @@ try {
             {header: 'Options', optionList}
         ]));
     } else {
+        const {default: repertoire} = await import(options.file);
         if (!options.eco) {
             computeRepertoireFEN(repertoire.white);
             computeRepertoireFEN(repertoire.black);
@@ -181,12 +182,12 @@ try {
             const opponentRating = getOpponentRating(game.headers, options.color);
 
             if (!options.eco) {
-                line = findMatchingLine(game, false);
+                line = findMatchingLine(repertoire, game, false);
             }
             if (line) {
                 updateResult(result.rep, line.name, game.result, opponentRating);
             } else {
-               line = findMatchingLine(game, true);
+               line = findMatchingLine(repertoire, game, true);
                if (line) updateResult(result.eco, line.name, game.result, opponentRating);
             }
         }
