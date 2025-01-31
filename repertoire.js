@@ -130,6 +130,7 @@ module.exports = {
         {moves: "1. e4 Nf6 2. Nc3 d5 3. exd5 *", name: "Alekhine - 2. Nc3 d5 3. exd5"},
         {moves: "1. e4 Nf6 2. Nc3 d5 3. e5 *", name: "Alekhine - 2. Nc3 d5 3. e5"},
         {moves: "1. d4 d5 2. Bf4 Nf6 3. e3 c5 *" , name: "London System"},
+        {moves: "1. d4 d5 2. Bf4 Nf6 3. Nc3 c5 4. e3 *", name: "London System"},
         {moves: "1. d4 d5 2. Nf3 Nf6 3. Bg5 Ne4 *", name: "Torre Attack"},
         {moves: "1. d4 d5 2. Nf3 Nf6 3. e3 Bg4 *", name: "Colle System"},
         {moves: "1. d4 d5 2. e3 Nf6 3. f4 *", name: "Stonewall System"},

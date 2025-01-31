@@ -1,5 +1,6 @@
-/* cache api responses to speed things up
-   convert to express app with web page to enter params and show results
+/* convert to express app with web page to enter params and show results
+   store game list for each line
+   calculate accuracy for each side, average accuracy per opening line
 */
 import util from 'node:util';
 import axios from 'axios';
@@ -142,7 +143,7 @@ const findMatchingLine = (repertoire, game, eco) => {
     let line = null;
     for (const {move} of game.moves.slice(0, options.depth)) {
         chess.move(move);
-        const l = eco ? ECO(chess.fen()) : repertoire[options.color].find(elem => elem.fen === chess.fen());
+        const l = eco ? ECO(chess.fen()) : repertoire[options.color].find(elem => compareFEN(elem.fen, chess.fen()));
         if (l) line = l;
     }
     chess.reset();
@@ -152,6 +153,10 @@ const findMatchingLine = (repertoire, game, eco) => {
 const getOpponentRating = (headers, color) => {
     const key = color === 'White' ? 'BlackElo' : 'WhiteElo';
     return +headers.find(h => h.name === key).value || 0;
+};
+
+const compareFEN = (fen1, fen2) => {
+    return fen1.split(" ").slice(0, 3).join(" ") === fen2.split(" ").slice(0, 3).join(" ");
 };
 
 try {
