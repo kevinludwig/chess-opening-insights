@@ -6,7 +6,12 @@ Analyze your chess.com openings to see where you're winning and losing
 
 ### Usage
 
-You need to modify the file `repertoire.js` to include the lines you want classified in your repertoire
+See all help options
+```
+node ./insight.mjs --help
+```
+
+You need to modify the file `repertoire.js` to include the lines you want classified in your repertoire. The basic command to classify chess.com and lichess.org repertoire is:
 
 ```
 node ./insight.mjs --username yourUsername --months 1 --color white
@@ -16,6 +21,22 @@ You can also classify simply by chess.com games and ECO codes like this:
 ```
 node ./insight.mjs --username yourUsername --months 1 --color white --eco
 ```
+
+If you want to limit to just chess.com:
+```
+node ./insight.mjs --source chess.com --username-chesscom yourUsername --months 6 --color white 
+```
+
+Limit to just lichess:
+```
+node ./insight.mjs --source lichess --username-lichess yourUsername --months 6 --color white
+```
+
+Set half-move depth to cap classsification at
+```
+node ./insight.mjs --username yourUsername --months 6 --color white --depth 20
+```
+
 ### Output
 
 The result from the console log above would be 
